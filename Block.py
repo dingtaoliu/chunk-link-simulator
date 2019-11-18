@@ -11,5 +11,5 @@ class Block:
   # list of verified transactions
   transactions = []
 
-  def __init__(self):
+  def __init__(self, prev_hash):
     self.block_hash = uuid.uuid4()

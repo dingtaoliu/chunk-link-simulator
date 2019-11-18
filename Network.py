@@ -6,6 +6,7 @@ class Network
 
   def __init__(self, num_nodes):
     self.graph = nx.complete_graph(num_nodes)
+    self.num_nodes = num_nodes
     for i in num_nodes:
       self.graph[i]['node'] = Node(i)
   
@@ -19,6 +20,11 @@ class Network
   def gossip_block(self, node_id):
     gossip_factor = self.graph[node_id]['gossip_factor']
 
-    neighbors = random.
+    neighbors = list(range(self.num_nodes))
+    neighbors.remove(node_id)
+    neighbors = random.shuffle(neighbors)[:gossip_factor]
+    
+  
+
 
 

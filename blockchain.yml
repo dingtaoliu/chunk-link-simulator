@@ -1,0 +1,7 @@
+name: blockchain
+channels:
+  - anaconda
+dependencies:
+  - networkx
+  - matplotlib
+  - pygraphviz

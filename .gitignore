@@ -1,2 +1,4 @@
 __pycache__/
 graphs/
+*.png
+*DS_Store

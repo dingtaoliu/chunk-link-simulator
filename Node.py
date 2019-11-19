@@ -1,5 +1,6 @@
 import networkx as nx 
 from networkx.drawing.nx_agraph import graphviz_layout
+import pygraphviz
 import matplotlib.pyplot as plt
 import random
 from Block import *
@@ -69,12 +70,31 @@ class Node:
   
   def draw_dag(self):
     position = graphviz_layout(self.block_dag, prog='dot')
+    agraph = nx.nx_agraph.to_agraph(self.block_dag)
+    agraph.graph_attr.update(nodesep='0.1')
+    print(agraph)
+    agraph.layout(prog='dot')
+    position = self.get_position_from_agraph(agraph)
+    #agraph.draw("graphs/{}_block_dag.png".format(self.id))
     #print(self.block_dag)
     nx.draw(self.block_dag, position, with_labels=True, arrows=True, scale=100)
     plt.savefig("graphs/{}_block_dag.png".format(self.id))
 
     # clear the figure or else subsequent graphs will be combined for some reason
     plt.clf()
+
+  def get_position_from_agraph(self, agraph):
+    node_pos = {}
+    for n in self.block_dag:
+        node = pygraphviz.Node(agraph, n)
+        try:
+            xx, yy = node.attr["pos"].split('.')
+            node_pos[n] = (float(xx), float(yy))
+        except:
+            print("no position for node", n)
+            node_pos[n] = (0.0, 0.0)
+    return node_pos
+
 
 if __name__ == "__main__":
   n = Node("test")

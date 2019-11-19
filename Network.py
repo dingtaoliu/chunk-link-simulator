@@ -30,7 +30,7 @@ class Network:
 if __name__ == "__main__":
   net = Network(5)
   net.set_uniform_gossip_factor(3)
-  for i in range(20):
+  for i in range(100):
     node_id = random.choice(range(5))
     net.gossip_block(node_id)
 

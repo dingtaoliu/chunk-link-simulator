@@ -2,14 +2,10 @@ import uuid
 
 class Block:
   
-  # pointer to parent block
-  prev_hash = None
-
-  # simulated block hash
-  block_hash = None 
-
-  # list of verified transactions
-  transactions = []
-
+  # counter
+  counter = 0
   def __init__(self, prev_hash):
-    self.block_hash = uuid.uuid4()
+    #self.block_hash = uuid.uuid4()
+    self.block_hash = Block.counter
+    Block.counter += 1
+    self.prev_hash = prev_hash

@@ -2,3 +2,6 @@ __pycache__/
 graphs/
 *.png
 *DS_Store
+.vscode/
+src/__pycache__/
+env/

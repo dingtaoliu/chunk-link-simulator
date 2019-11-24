@@ -6,24 +6,20 @@ from Block import *
 
 class Node: 
 
-  # unconfirmed transactions pool
-  tx_pool = []
-
-  # genesis block 
-  gen_block = None
-
-  # time stamp
-  timestap = None
-
-  last_block = None
-
   def __init__(self, identifier):
     self.id = identifier
     self.block_dag = nx.DiGraph()
     self.block_dag.add_node("genesis", depth=1, prev = 'lol')
-  
+    self.last_block = None
+    self.block_buffer = []
+
   def append_block(self, block):
+    if block.block_hash in self.block_dag.nodes:
+      return
+
     prev_block = block.prev_hash
+    self.latest_block = block
+
     if prev_block in self.block_dag.nodes:
       prev_depth = self.block_dag.nodes[prev_block]['depth']
       self.block_dag.add_node(block.block_hash, depth = prev_depth + 1, block = block, prev = prev_block)
@@ -37,8 +33,8 @@ class Node:
       for c in children:
         self.block_dag.add_edge(block.block_hash, c)
         tree = nx.bfs_tree(self.block_dag, c)
-        for node, data in tree.nodes(data=True):
-          data['depth'] += depth
+        for node in tree.nodes:
+          self.block_dag.nodes[node]['depth'] += depth
 
 
   def create_block(self, method):
@@ -53,8 +49,12 @@ class Node:
       self.last_block = block
       self.append_block(block)
 
+
+
   def gossip_block(self, nodes):
-    self.create_block("longest_chain")
+    #self.create_block("longest_chain")
+    if not self.last_block:
+      return
     for node in nodes:
       node.append_block(self.last_block)
 
@@ -62,9 +62,10 @@ class Node:
   def get_longest_chain_blocks(self):
     # for b, d in self.block_dag.nodes(data=True):
     #   print(d)
-
-    max_len = len(nx.dag_longest_path(self.block_dag))
-    return [b for b,d in self.block_dag.nodes(data=True) if d['depth'] == max_len]
+    tree = nx.bfs_tree(self.block_dag, "genesis")
+    nodes = tree.nodes
+    max_len = len(nx.dag_longest_path(tree))
+    return [b for b,d in self.block_dag.nodes(data=True) if (d['depth'] == max_len) and (b in nodes)]
 
   
   def draw_dag(self):

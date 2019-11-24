@@ -28,16 +28,20 @@ class Network:
     self.graph.nodes[node_id]['node'].gossip_block(nodes)
 
 if __name__ == "__main__":
-  net = Network(5)
-  net.set_uniform_gossip_factor(3)
-  for i in range(20):
+  net = Network(1000)
+  net.set_uniform_gossip_factor(900)
+  num_nodes = len(net.graph.nodes)
+  for i in range(50):
     node_id = random.choice(range(5))
-    net.gossip_block(node_id)
+    net.graph.nodes[node_id]['node'].create_block("longest_chain")
 
-  for node_id, data in net.graph.nodes(data=True):
-    data['node'].draw_dag()
+    for i in range(num_nodes):
+      net.gossip_block(i)
+
+  for node_id in list(net.graph.nodes)[:10]:
+    net.graph.nodes[node_id]['node'].draw_dag()
   
-
+# 6 - 8 pages report
   
 
 

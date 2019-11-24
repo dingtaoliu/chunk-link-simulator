@@ -72,7 +72,7 @@ class Node:
     position = graphviz_layout(self.block_dag, prog='dot')
     #print(self.block_dag)
     nx.draw(self.block_dag, position, with_labels=True, arrows=True, scale=100)
-    plt.savefig("graphs/{}_block_dag.png".format(self.id))
+    plt.savefig("../{}_block_dag.png".format(self.id))
 
     # clear the figure or else subsequent graphs will be combined for some reason
     plt.clf()

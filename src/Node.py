@@ -63,6 +63,24 @@ class Node:
 
 
   def create_block(self):
+    candidates = []
+    # figure out where to append this block
+
+    # TODO: Why do we find the parent at timer step? Shouldn't we find this
+    # parent at creation time?
+    # For example, say we will generate 1000 years from now.
+    # We choose parent now, say block 3.
+    # It is possible that we have an updated chain from other nodes, but the
+    # block we choose to parent on (block 3) is still at the very beginning
+    # rather than the longest chain when we reach the block time.
+    if Block.METHOD == "longest_chain":
+      candidates = self.get_longest_chain_blocks()
+
+    # tie breaker
+    parent = random.choice(candidates)
+    block = Block(parent)
+
+    self.new_block = block 
     self.append_block(self.new_block)
     self.create_block_event()
 
@@ -90,17 +108,24 @@ class Node:
 
         heapq.heappush(node.event_buffer, (timestamp, block))
 
+        # increment counter by one for every node we should process.
+        counter += 1
+
   def process_event(self, timedelta):
     # update current timestamp
     self.time = self.time + timedelta
 
     # check if any events should be processed
+
+    # TODO: Are we sure that event_buffer[0] is the smallest element?
+    # If we're using a heap, should we do a comparison like:
+    # heapq.nsmallest(1, self.event_buffer)?
     while self.event_buffer[0][0] <= self.time:
       print("processing event queue of {}".format(self.id))
       print(len(self.event_buffer))
       block = heapq.heappop(self.event_buffer)[1]
 
-      if block == self.new_block:
+      if block is None:
         self.create_block()
       else:
         self.append_block(block)
@@ -110,22 +135,16 @@ class Node:
 
   def create_block_event(self):
     # figure out when to generate the next block
+    print("Ya called me")
     time_to_generate = random.expovariate(Block.AVG_GEN_TIME)
+
+    # TODO: If we have async time, shouldn't we just keep track of time_to_generate?
     timestamp = self.time + datetime.timedelta(minutes=time_to_generate)
 
-    candidates = []
-    # figure out where to append this block
-    if Block.METHOD == "longest_chain":
-      candidates = self.get_longest_chain_blocks()
+    # TODO: I guess that with the timestamp only affecting the self.buffer, we should be good.
+    # Append a None block to force block creation in our process_event
+    heapq.heappush(self.event_buffer, (timestamp, None))
 
-    # tie breaker
-    parent = random.choice(candidates)
-    block = Block(parent)
-
-    self.new_block = block 
-
-    heapq.heappush(self.event_buffer, (timestamp, self.new_block))
-  
   def get_longest_chain_blocks(self):
     # for b, d in self.block_dag.nodes(data=True):
     #   print(d)

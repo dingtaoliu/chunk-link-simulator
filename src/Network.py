@@ -7,7 +7,7 @@ import datetime
 class Network:
 
   # average delay 
-  AVERAGE_NETWORK_DELAY = datetime.timedelta(seconds=5)
+  AVERAGE_NETWORK_DELAY = datetime.timedelta(seconds=1)
 
   def __init__(self, num_nodes):
     self.graph = nx.complete_graph(num_nodes)

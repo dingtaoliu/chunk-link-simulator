@@ -3,6 +3,7 @@ from Node import *
 from Network import *
 import random
 import datetime
+import math
 
 class Simulator:
 
@@ -27,12 +28,12 @@ class Simulator:
       n.create_block_event()
 
     while self.time_passed < self.duration:
-      time_interval = self.get_next_interval()
+      nodes, time_interval = self.get_next_nodes()
 
-      for n in self.nodes:
+      for n in nodes:
         neighbours = self.get_random_neighbours(n)
         n.update_neighbours(neighbours)
-        n.process_event(time_interval)
+        n.process_event()
 
       self.time_passed += time_interval
       print("{} has passed".format(self.time_passed))
@@ -41,16 +42,23 @@ class Simulator:
       n.draw_dag()
 
 
-  def get_next_interval(self):
-    intervals = []
+  def get_next_nodes(self):
+    nodes = []
+    min_time = datetime.timedelta.max
     for n in self.nodes:
-      intervals.append(n.next_interval())
-    return min(intervals)
+      interval = n.next_interval()
+      if interval == min_time:
+        nodes.append(n)
+      elif interval < min_time:
+        nodes = [n]
+        min_time = interval
+
+    return nodes, min_time
 
   def get_random_neighbours(self, node):
     node_ids = self.network.random_neighbours(node.id)
     return [self.nodes[i] for i in range(self.num_nodes)]
 
 if __name__ == "__main__":
-  sim = Simulator(20, 0.1, 10)
+  sim = Simulator(1000, 1, 20)
   sim.run_simulation()

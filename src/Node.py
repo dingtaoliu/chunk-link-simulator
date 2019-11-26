@@ -36,6 +36,8 @@ class Node:
 
     self.neighbours = None
 
+    self.gossip_hash = {}
+
   def append_block(self, block):
     # skip if block is already seen
     if block.block_hash in self.block_dag.nodes:
@@ -82,10 +84,13 @@ class Node:
     # gossip all blocks in buffer
     # can be tweaked to only gossip blocks not yet gossipped 
     counter = 0
+    #print("Node {} has {} items to gossip".format(self.id, len(self.gossip_buffer)))
     while self.gossip_buffer:
       block = self.gossip_buffer.pop()
 
+      #print("Neighbours: {}".format([n.id for n in self.neighbours]))
       for node in self.neighbours:
+        #print(node.id)
         node_time = node.time
         # dont gossip to nodes that have already seen this node
         if block in node.known_blocks:
@@ -96,22 +101,25 @@ class Node:
         # delay = datetime.timedelta(0)
 
         timestamp = node_time + delay + Network.AVERAGE_NETWORK_DELAY
-        
         event = Event(EventType.RECEIVE_BLOCK, block, timestamp)
 
+        # if block.block_hash in node.gossip_hash:
+          #if timestamp < node.gossip_hash[block.block_hash]:
         heapq.heappush(node.event_buffer, event)
+        #print("Node {} gossips block {} to Node {}".format(self.id, block.block_hash, node.id))
         
         counter += 1
 
-  def process_event(self, timedelta):
+  def process_event(self):
     # update current timestamp
-    self.time = self.time + timedelta
+    self.time = self.event_buffer[0].timestamp
     
     if not self.event_buffer:
         return
     
     # check if any events should be processed
-    while self.event_buffer and self.event_buffer[0].timestamp <= self.time:
+    #print("Node {} has {} items to process".format(self.id, len(self.event_buffer)))
+    while self.event_buffer[0].timestamp <= self.time:
       #print("processing event queue of {}".format(self.id))
       #print(len(self.event_buffer))
       event = heapq.heappop(self.event_buffer)
@@ -121,19 +129,30 @@ class Node:
       else:
         self.append_block(event.block)
         self.gossip_buffer.append(event.block)
+        self.clean_event_buffer(event.block)
       
       if Block.METHOD == "longest_chain":
         candidates = self.get_longest_chain_blocks()
       
       if self.best_block not in candidates:
         self.create_block_event()
-    
-      self.gossip_block()
+
       self.known_blocks.append(event.block)
+    
+    self.gossip_block()
+
+  def clean_event_buffer(self, block):
+    new_buffer = []
+    for event in self.event_buffer:
+      if event.block != block:
+        new_buffer.append(event)
+    heapq.heapify(new_buffer)
+    self.event_buffer = new_buffer
 
   def create_block_event(self):
     # figure out when to generate the next block
     time_to_generate = random.expovariate(Block.AVG_GEN_TIME)
+    #print("Node {} will generate a block in {}".format(self.id, time_to_generate))
     timestamp = self.time + datetime.timedelta(minutes=time_to_generate)
 
     candidates = []

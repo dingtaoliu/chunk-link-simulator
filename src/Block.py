@@ -5,8 +5,8 @@ class Block:
   # counter
   counter = 1
 
-  # average block gen rate per minute
-  AVG_GEN_TIME = 0.1
+  # number of blocks per number of minutes
+  AVG_GEN_TIME = 1 / 60
 
   METHOD = "longest_chain"
 

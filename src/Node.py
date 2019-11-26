@@ -11,7 +11,7 @@ from Event import *
 
 class Node: 
 
-  def __init__(self, identifier, time, upload_bandwidth=5):
+  def __init__(self, identifier, time, hash_power, upload_bandwidth=5):
     self.id = identifier
     self.best_block = "genesis"
     self.block_dag = nx.DiGraph()
@@ -37,6 +37,11 @@ class Node:
     self.neighbours = None
 
     self.gossip_hash = {}
+
+    self.hash_power = hash_power
+
+    self.block_time = 1 / self.hash_power * Block.AVG_GEN_TIME
+
 
   def append_block(self, block):
     # skip if block is already seen
@@ -74,6 +79,7 @@ class Node:
       candidates = self.get_longest_chain_blocks()
 
     if block.prev_hash in candidates:
+        print("Node {} generated block {}".format(self.id, block.block_hash))
         self.append_block(block)
         self.created_blocks.append(block.block_hash)
         self.create_block_event()
@@ -107,7 +113,7 @@ class Node:
           #if timestamp < node.gossip_hash[block.block_hash]:
         heapq.heappush(node.event_buffer, event)
         #print("Node {} gossips block {} to Node {}".format(self.id, block.block_hash, node.id))
-        
+
         counter += 1
 
   def process_event(self):
@@ -126,10 +132,12 @@ class Node:
 
       if event.event_type == EventType.CREATE_BLOCK:
         self.create_block(event.block)
+        #print("Node {} processing create block".format(self.id))
       else:
         self.append_block(event.block)
         self.gossip_buffer.append(event.block)
         self.clean_event_buffer(event.block)
+        #print("Node {} processing block {}".format(self.id, event.block.block_hash))
       
       if Block.METHOD == "longest_chain":
         candidates = self.get_longest_chain_blocks()
@@ -151,9 +159,9 @@ class Node:
 
   def create_block_event(self):
     # figure out when to generate the next block
-    time_to_generate = random.expovariate(Block.AVG_GEN_TIME)
-    #print("Node {} will generate a block in {}".format(self.id, time_to_generate))
-    timestamp = self.time + datetime.timedelta(minutes=time_to_generate)
+    #print(self.block_time)
+    time_to_generate = random.expovariate(1 / self.block_time)
+    timestamp = self.time + datetime.timedelta(minutes=(time_to_generate))
 
     candidates = []
     # figure out where to append this block
@@ -164,7 +172,7 @@ class Node:
     parent = random.choice(candidates)
     self.best_block = parent
     block = Block(parent)
-
+    #print("Node {} will generate block {} in {}".format(self.id, block.block_hash, time_to_generate))
     event = Event(EventType.CREATE_BLOCK, block, timestamp)
 
     heapq.heappush(self.event_buffer, event)
@@ -182,7 +190,7 @@ class Node:
     position = graphviz_layout(self.block_dag, prog='dot')
     #print(self.block_dag)
     nx.draw(self.block_dag, position, with_labels=True, arrows=True, scale=100)
-    plt.savefig("{}_block_dag.png".format(self.id))
+    plt.savefig("../graphs/{}_block_dag.png".format(self.id))
 
     # clear the figure or else subsequent graphs will be combined for some reason
     plt.clf()
@@ -199,6 +207,14 @@ class Node:
   def get_candidates(self):
     if Block.METHOD == "longest_chain":
       return self.get_longest_chain_blocks()
+
+
+  def print_stats(self):
+    print("Node {} stats: ".format(self.id))
+    print(" hash power: {}".format(self.hash_power))
+    print(" average block time: {}".format(self.block_time))
+    print(" blocks generated: {}".format(len(self.created_blocks)))
+
 
 if __name__ == "__main__":
   n = Node("test")

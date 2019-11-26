@@ -7,7 +7,7 @@ import datetime
 class Network:
 
   # average delay 
-  AVERAGE_NETWORK_DELAY = datetime.timedelta(seconds=1)
+  AVERAGE_NETWORK_DELAY = datetime.timedelta(seconds=120)
 
   def __init__(self, num_nodes):
     self.graph = nx.complete_graph(num_nodes)
@@ -18,17 +18,6 @@ class Network:
     num_nodes = len(self.graph.nodes)
     for i in range(num_nodes):
       self.graph.nodes[i]['gossip_factor'] = factor 
-  
-#   def gossip_block(self, node_id):
-#     gossip_factor = self.graph.nodes[node_id]['gossip_factor']
-
-#     node_ids = list(range(len(self.graph.nodes)))
-#     node_ids.remove(node_id)
-#     random.shuffle(node_ids)
-#     # print(node_ids)
-#     node_ids = node_ids[:gossip_factor]
-#     nodes = [d['node'] for b,d in self.graph.nodes(data=True) if b in node_ids]
-#     self.graph.nodes[node_id]['node'].gossip_block(nodes)
 
   def random_neighbours(self, node_id):
     gossip_factor = self.graph.nodes[node_id]['gossip_factor']

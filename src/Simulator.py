@@ -15,10 +15,14 @@ class Simulator:
     self.num_nodes = num_nodes
     self.nodes = []
 
+    r = [random.random() for i in range(num_nodes)]
+    s = sum(r)
+    hp = [i/s for i in r]
+
     time = datetime.datetime.now()
 
     for i in range(num_nodes):
-      self.nodes.append(Node(i, time))
+      self.nodes.append(Node(i, time, 1))
 
     self.network.set_uniform_gossip_factor(gossip_factor)
 
@@ -26,7 +30,10 @@ class Simulator:
   def run_simulation(self):
     for n in self.nodes:
       n.create_block_event()
+      #n.print_stats()
 
+    counter = 0
+    log_interval = datetime.timedelta(minutes=10)
     while self.time_passed < self.duration:
       nodes, time_interval = self.get_next_nodes()
 
@@ -36,10 +43,14 @@ class Simulator:
         n.process_event()
 
       self.time_passed += time_interval
-      print("{} has passed".format(self.time_passed))
+      #print("{} has passed".format(self.time_passed))
+      if self.time_passed // log_interval > counter:
+        counter += 1
+        print("{} minutes has passed".format(counter * 10))
     print("Simulation complete!")
-    for n in self.nodes[0:5]:
+    for n in self.nodes:
       n.draw_dag()
+      n.print_stats()
 
 
   def get_next_nodes(self):
@@ -60,5 +71,6 @@ class Simulator:
     return [self.nodes[i] for i in range(self.num_nodes)]
 
 if __name__ == "__main__":
-  sim = Simulator(1000, 1, 20)
+  random.seed(1234)
+  sim = Simulator(100, 1, 5)
   sim.run_simulation()

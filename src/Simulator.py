@@ -35,9 +35,9 @@ class Simulator:
         n.process_event(time_interval)
 
       self.time_passed += time_interval
-      print("../graphs/{} has passed".format(self.time_passed))
+      print("{} has passed".format(self.time_passed))
     print("Simulation complete!")
-    for n in self.nodes:
+    for n in self.nodes[0:5]:
       n.draw_dag()
 
 
@@ -52,5 +52,5 @@ class Simulator:
     return [self.nodes[i] for i in range(self.num_nodes)]
 
 if __name__ == "__main__":
-  sim = Simulator(5, 1, 5)
+  sim = Simulator(20, 0.1, 10)
   sim.run_simulation()

@@ -135,7 +135,8 @@ class Node:
         #print("Node {} processing create block".format(self.id))
       else:
         self.append_block(event.block)
-        self.gossip_buffer.append(event.block)
+        if event.block not in self.gossip_buffer:
+          self.gossip_buffer.append(event.block)
         self.clean_event_buffer(event.block)
         #print("Node {} processing block {}".format(self.id, event.block.block_hash))
       
@@ -202,6 +203,7 @@ class Node:
     return timedelta
 
   def update_neighbours(self, nodes):
+    random.shuffle(nodes)
     self.neighbours = nodes
 
   def get_candidates(self):
@@ -214,6 +216,7 @@ class Node:
     print(" hash power: {}".format(self.hash_power))
     print(" average block time: {}".format(self.block_time))
     print(" blocks generated: {}".format(len(self.created_blocks)))
+    print(" event buffer size: {}".format(len(self.event_buffer)))
 
 
 if __name__ == "__main__":

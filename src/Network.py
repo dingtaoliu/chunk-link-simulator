@@ -7,9 +7,9 @@ import datetime
 class Network:
 
   # average delay 
-  AVERAGE_NETWORK_DELAY = datetime.timedelta(seconds=1)
+  AVERAGE_NETWORK_DELAY = datetime.timedelta(seconds=12)
 
-  def __init__(self, num_nodes):
+  def __init__(self, num_nodes, num_neighbours, seed=1234):
     """
     Network class.
 
@@ -17,10 +17,15 @@ class Network:
     ----------
     num_nodes : int
         Num of nodes in this network.
+    num_neighbours : int
+        Number of neighbours per node.
+    seed : int
+        Seed
     """
-    self.graph = nx.complete_graph(num_nodes)
-  
 
+    self.graph = nx.fast_gnp_random_graph(num_nodes, num_neighbours / num_nodes, seed = 1234)
+  
+  # gossip factor is how many neighbours each node will gossip to 
   def set_uniform_gossip_factor(self, factor):
     """
     Sets the gossip factor of this network.
@@ -34,17 +39,6 @@ class Network:
     num_nodes = len(self.graph.nodes)
     for i in range(num_nodes):
       self.graph.nodes[i]['gossip_factor'] = factor 
-  
-#   def gossip_block(self, node_id):
-#     gossip_factor = self.graph.nodes[node_id]['gossip_factor']
-
-#     node_ids = list(range(len(self.graph.nodes)))
-#     node_ids.remove(node_id)
-#     random.shuffle(node_ids)
-#     # print(node_ids)
-#     node_ids = node_ids[:gossip_factor]
-#     nodes = [d['node'] for b,d in self.graph.nodes(data=True) if b in node_ids]
-#     self.graph.nodes[node_id]['node'].gossip_block(nodes)
 
   def random_neighbours(self, node_id):
     """
@@ -60,6 +54,9 @@ class Network:
     node_ids.remove(node_id)
     random.shuffle(node_ids)
     return node_ids[:gossip_factor]
+  
+  def neighbours(self, node_id):
+    return [n for n in self.graph[node_id]]
 
 
 # if __name__ == "__main__":

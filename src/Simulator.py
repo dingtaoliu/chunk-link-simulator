@@ -8,7 +8,7 @@ import math
 class Simulator:
 
 
-  def __init__(self, num_nodes, duration, gossip_factor):
+  def __init__(self, num_nodes, duration, num_neighbours):
     """
     A Simulator that simulates the chain growing process for a
     `duration` period of time.
@@ -21,21 +21,24 @@ class Simulator:
         Num of nodes to run for this simulation.
     duration : int
         Simulation time interval.
-    gossip_factor : int
-        Number of neighbor nodes to broadcast to for each replaying.
+    num_neighbours : int
+        Number of neighbors per nodes.
     """
     self.duration = datetime.timedelta(hours=duration)
     self.time_passed = datetime.timedelta(0)
-    self.network = Network(num_nodes)
+    self.network = Network(num_nodes, num_neighbours)
     self.num_nodes = num_nodes
     self.nodes = []
+
+    r = [random.random() for i in range(num_nodes)]
+    s = sum(r)
+    hp = [i/s for i in r]
 
     time = datetime.datetime.now()
 
     for i in range(num_nodes):
-      self.nodes.append(Node(i, time))
-
-    self.network.set_uniform_gossip_factor(gossip_factor)
+      self.nodes.append(Node(i, time, 1))
+    #self.network.set_uniform_gossip_factor(gossip_factor)
 
 
   def run_simulation(self):
@@ -45,21 +48,36 @@ class Simulator:
     # I dont think this is a bug though. Every node is expected to generate one block/h
     # we got 1k nodes => expected to generate 1k blocks within a hour
     for n in self.nodes:
+      neighbours = self.get_neighbours(n.id)
+      n.update_neighbours(neighbours)
       n.create_block_event()
+      #n.print_stats()
 
+    counter = 0
+    iterations = 0
+    log_interval = datetime.timedelta(minutes=10)
     while self.time_passed < self.duration:
+      iterations += 1
+
       nodes, time_interval = self.get_next_nodes()
 
       for n in nodes:
-        neighbours = self.get_random_neighbours(n)
-        n.update_neighbours(neighbours)
         n.process_event()
 
       self.time_passed += time_interval
-      print("{} has passed".format(self.time_passed))
+      #print("{} has passed".format(self.time_passed))
+      if self.time_passed // log_interval > counter:
+        counter += 1
+        print("{} minutes has passed".format(counter * 10))
     print("Simulation complete!")
-    for n in self.nodes[0:5]:
-      n.draw_dag()
+    print("{} total iterations".format(iterations))
+    i = 0
+    for n in self.nodes:
+      i += 1
+      if i % 10 == 0:
+
+        n.draw_dag()
+        n.print_stats()
 
 
   def get_next_nodes(self):
@@ -86,6 +104,11 @@ class Simulator:
     node_ids = self.network.random_neighbours(node.id)
     return [self.nodes[i] for i in range(self.num_nodes)]
 
+  def get_neighbours(self, node):
+    node_ids =  self.network.neighbours(node)
+    return [self.nodes[i] for i in range(self.num_nodes)]
+
 if __name__ == "__main__":
-  sim = Simulator(1000, 1, 20)
+  random.seed(1234)
+  sim = Simulator(500, 1, 20)
   sim.run_simulation()

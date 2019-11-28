@@ -9,6 +9,21 @@ class Simulator:
 
 
   def __init__(self, num_nodes, duration, gossip_factor):
+    """
+    A Simulator that simulates the chain growing process for a
+    `duration` period of time.
+
+    Each Simulator associates one simulation of the chain.
+
+    Parameters
+    ----------
+    num_bodes : str
+        Num of nodes to run for this simulation.
+    duration : int
+        Simulation time interval.
+    gossip_factor : int
+        Number of neighbor nodes to broadcast to for each replaying.
+    """
     self.duration = datetime.timedelta(hours=duration)
     self.time_passed = datetime.timedelta(0)
     self.network = Network(num_nodes)
@@ -24,6 +39,11 @@ class Simulator:
 
 
   def run_simulation(self):
+    """
+    Runs the simulation. 
+    """
+    # I dont think this is a bug though. Every node is expected to generate one block/h
+    # we got 1k nodes => expected to generate 1k blocks within a hour
     for n in self.nodes:
       n.create_block_event()
 
@@ -43,6 +63,9 @@ class Simulator:
 
 
   def get_next_nodes(self):
+    """
+    Get the next nodes to process at the next minimum timestamp.
+    """
     nodes = []
     min_time = datetime.timedelta.max
     for n in self.nodes:
@@ -56,6 +79,10 @@ class Simulator:
     return nodes, min_time
 
   def get_random_neighbours(self, node):
+    """
+    Shuffles the neighbours and return a random subset of it with 
+    cardinality equal to the `gossip_factor`.
+    """
     node_ids = self.network.random_neighbours(node.id)
     return [self.nodes[i] for i in range(self.num_nodes)]
 

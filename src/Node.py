@@ -11,7 +11,7 @@ from Event import *
 
 class Node: 
 
-  def __init__(self, identifier, time, hash_power, upload_bandwidth=5):
+  def __init__(self, identifier, time, hash_power, master = None, upload_bandwidth=5):
     self.id = identifier
     self.best_block = "genesis"
     self.block_dag = nx.DiGraph()
@@ -41,6 +41,8 @@ class Node:
     self.hash_power = hash_power
 
     self.block_time = 1 / self.hash_power * Block.AVG_GEN_TIME
+
+    self.master = master
 
 
   def append_block(self, block):
@@ -79,8 +81,9 @@ class Node:
       candidates = self.get_longest_chain_blocks()
 
     if block.prev_hash in candidates:
-        print("Node {} generated block {}".format(self.id, block.block_hash))
+        #print("Node {} generated block {}".format(self.id, block.block_hash))
         self.append_block(block)
+        self.master.append_block(block)
         self.created_blocks.append(block.block_hash)
         self.create_block_event()
         self.gossip_buffer.append(block)
@@ -135,7 +138,7 @@ class Node:
         #print("Node {} processing create block".format(self.id))
       else:
         self.append_block(event.block)
-        if event.block not in self.gossip_buffer:
+        if event.block not in self.known_blocks:
           self.gossip_buffer.append(event.block)
         self.clean_event_buffer(event.block)
         #print("Node {} processing block {}".format(self.id, event.block.block_hash))
@@ -217,6 +220,10 @@ class Node:
     print(" average block time: {}".format(self.block_time))
     print(" blocks generated: {}".format(len(self.created_blocks)))
     print(" event buffer size: {}".format(len(self.event_buffer)))
+
+  def update_master(self, master, block):
+    master.append_block(block)
+
 
 
 if __name__ == "__main__":

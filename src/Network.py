@@ -7,7 +7,7 @@ import datetime
 class Network:
 
   # average delay 
-  AVERAGE_NETWORK_DELAY = datetime.timedelta(seconds=12)
+  AVERAGE_NETWORK_DELAY = datetime.timedelta(seconds=20)
 
   def __init__(self, num_nodes, num_neighbours, seed=1234):
     self.graph = nx.fast_gnp_random_graph(num_nodes, num_neighbours / num_nodes, seed = 1234)
@@ -27,6 +27,7 @@ class Network:
   
   def neighbours(self, node_id):
     return [n for n in self.graph[node_id]]
+
 
 
 # if __name__ == "__main__":

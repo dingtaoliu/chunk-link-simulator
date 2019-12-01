@@ -11,7 +11,7 @@ from Event import *
 
 class Node: 
 
-  def __init__(self, identifier, time, hash_power, master = None, upload_bandwidth=5):
+  def __init__(self, identifier, time, hash_power, master = None, upload_bandwidth=50):
     """
     Node class represent the mining nodes.
 
@@ -50,11 +50,9 @@ class Node:
 
     self.neighbours = None
 
-    self.gossip_hash = {}
+    block_time = 1 / hash_power * Block.AVG_GEN_TIME
 
-    self.hash_power = hash_power
-
-    self.block_time = 1 / self.hash_power * Block.AVG_GEN_TIME
+    self.block_rate = 1 / block_time
 
     self.master = master
 
@@ -113,15 +111,16 @@ class Node:
     """
     candidates = []
 
-    if Block.METHOD == "longest_chain":
-      candidates = self.get_longest_chain_blocks()
+    candidates = self.get_candidates()
 
     if block.prev_hash in candidates:
         #print("Node {} generated block {}".format(self.id, block.block_hash))
         self.append_block(block)
         self.master.append_block(block)
+
         self.created_blocks.append(block.block_hash)
         self.create_block_event()
+
         self.gossip_buffer.append(block)
 
   def gossip_block(self):
@@ -171,8 +170,8 @@ class Node:
     # update current timestamp
     self.time = self.event_buffer[0].timestamp
     
-    if not self.event_buffer:
-        return
+    # if not self.event_buffer:
+    #     return
     
     # check if any events should be processed
     #print("Node {} has {} items to process".format(self.id, len(self.event_buffer)))
@@ -188,15 +187,14 @@ class Node:
         self.append_block(event.block)
         if event.block not in self.known_blocks:
           self.gossip_buffer.append(event.block)
-        self.clean_event_buffer(event.block)
         #print("Node {} processing block {}".format(self.id, event.block.block_hash))
       
-      if Block.METHOD == "longest_chain":
-        candidates = self.get_longest_chain_blocks()
-      
-      if self.best_block not in candidates:
-        self.create_block_event()
+        candidates = self.get_candidates()
+        
+        if self.best_block not in candidates:
+          self.create_block_event()
 
+      self.clean_event_buffer(event.block)
       self.known_blocks.append(event.block)
     
     self.gossip_block()
@@ -220,13 +218,12 @@ class Node:
   def create_block_event(self):
     # figure out when to generate the next block
     #print(self.block_time)
-    time_to_generate = random.expovariate(1 / self.block_time)
+    time_to_generate = random.expovariate(self.block_rate)
     timestamp = self.time + datetime.timedelta(minutes=(time_to_generate))
 
     candidates = []
     # figure out where to append this block
-    if Block.METHOD == "longest_chain":
-      candidates = self.get_longest_chain_blocks()
+    candidates = self.get_candidates()
 
     # tie breaker
     parent = random.choice(candidates)
@@ -250,7 +247,10 @@ class Node:
     position = graphviz_layout(self.block_dag, prog='dot')
     #print(self.block_dag)
     nx.draw(self.block_dag, position, with_labels=True, arrows=True, scale=100)
-    plt.savefig("../graphs/{}_block_dag.png".format(self.id))
+    if self.id == "master":
+      plt.savefig("{}_block_dag.png".format(self.id))
+    else:
+      plt.savefig("../graphs/{}_block_dag.png".format(self.id))
 
     # clear the figure or else subsequent graphs will be combined for some reason
     plt.clf()

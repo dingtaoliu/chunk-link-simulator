@@ -39,6 +39,11 @@ class Simulator:
 
     for i in range(num_nodes):
       self.nodes.append(Node(i, time, hp[i], self.master))
+
+    avg = 0
+    for i in range(num_nodes):
+      avg += self.nodes[i].block_rate
+    print("AVG BLOCK RATE IS {}".format(avg))
     #self.network.set_uniform_gossip_factor(gossip_factor)
 
 
@@ -69,9 +74,10 @@ class Simulator:
       #print("{} has passed".format(self.time_passed))
       if self.time_passed // log_interval > counter:
         counter += 1
+
         #print("{} minutes has passed".format(counter * 10))
-    print("Simulation complete!")
-    print("{} total iterations".format(iterations))
+    #print("Simulation complete!")
+    #print("{} total iterations".format(iterations))
     # i = 0
     # for n in self.nodes:
     #   i += 1
@@ -80,7 +86,7 @@ class Simulator:
     #     n.draw_dag()
     #     n.print_stats()
     total_blocks = len(self.master.block_dag.nodes)
-    print("{} blocks generated in total!".format(total_blocks))
+    #print("{} blocks generated in total!".format(total_blocks))
     self.master.draw_dag()
 
     return total_blocks
@@ -117,7 +123,8 @@ class Simulator:
 if __name__ == "__main__":
   #random.seed(1234)
   mean = 0
-  for i in range(20):
-    sim = Simulator(200, 10, 5)
+  for i in range(50):
+    Block.counter = 1
+    sim = Simulator(2, 24, 2)
     mean += sim.run_simulation()
-  print("Average num blocks generated: {}".format(mean / 20))
+  print("Average num blocks generated: {}".format(mean / 50))

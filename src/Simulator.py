@@ -65,10 +65,13 @@ class Simulator:
     while self.time_passed < self.duration:
       iterations += 1
 
-      nodes, time_interval = self.get_next_nodes()
+      event_nodes, time_interval = self.get_next_nodes()
 
-      for n in nodes:
-        n.process_event()
+      for n in self.nodes:
+        if n in event_nodes:
+          n.process_event()
+        else:
+          n.pass_time(time_interval)
 
       self.time_passed += time_interval
       #print("{} has passed".format(self.time_passed))
@@ -77,25 +80,24 @@ class Simulator:
 
         #print("{} minutes has passed".format(counter * 10))
     #print("Simulation complete!")
-    #print("{} total iterations".format(iterations))
-    # i = 0
-    # for n in self.nodes:
-    #   i += 1
-    #   if i % 10 == 0:
+    print("{} total iterations".format(iterations))
+    i = 0
+    for n in self.nodes:
+      i += 1
+      if i % 10 == 0:
 
-    #     n.draw_dag()
-    #     n.print_stats()
+        n.draw_dag()
     print("Hello there")
     print(self.time_passed)
     total_blocks = len(self.master.block_dag.nodes)
     #print("{} blocks generated in total!".format(total_blocks))
     self.master.draw_dag()
 
-    for i in self.nodes:
-      i.observe_create_events()
+    # for i in self.nodes:
+    #   i.observe_create_events()
 
-    for i in self.nodes:
-      print("current time for node {} is {}".format(i.id, i.time))
+    # for i in self.nodes:
+    #   print("current time for node {} is {}".format(i.id, i.time))
 
     return total_blocks
 
@@ -131,8 +133,9 @@ class Simulator:
 if __name__ == "__main__":
   #random.seed(1234)
   mean = 0
-  for i in range(10):
+  num_runs = 1
+  for i in range(num_runs):
     Block.counter = 1
-    sim = Simulator(2, 24,2)
+    sim = Simulator(50, 3, 10)
     mean += sim.run_simulation()
-  print("Average num blocks generated: {}".format(mean / 50))
+  print("Average num blocks generated: {}".format(mean / num_runs))

@@ -11,7 +11,7 @@ from Event import *
 
 class Node: 
 
-  def __init__(self, identifier, time, hash_power, master = None, upload_bandwidth=50):
+  def __init__(self, identifier, time, hash_power, master = None, upload_bandwidth=5):
     """
     Node class represent the mining nodes.
 
@@ -114,7 +114,7 @@ class Node:
     candidates = self.get_candidates()
 
     if block.prev_hash in candidates:
-        print("Node {} generated block {} at time {}".format(self.id, block.block_hash, self.time))
+        # print("Node {} generated block {} at time {}".format(self.id, block.block_hash, self.time))
         self.append_block(block)
         self.master.append_block(block)
 
@@ -286,7 +286,8 @@ class Node:
   def update_master(self, master, block):
     master.append_block(block)
 
-
+  def pass_time(self, time):
+    self.time += time
 
 if __name__ == "__main__":
   n = Node("test")

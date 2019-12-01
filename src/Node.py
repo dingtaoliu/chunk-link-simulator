@@ -114,7 +114,7 @@ class Node:
     candidates = self.get_candidates()
 
     if block.prev_hash in candidates:
-        #print("Node {} generated block {}".format(self.id, block.block_hash))
+        print("Node {} generated block {} at time {}".format(self.id, block.block_hash, self.time))
         self.append_block(block)
         self.master.append_block(block)
 
@@ -276,6 +276,12 @@ class Node:
     print(" average block time: {}".format(self.block_time))
     print(" blocks generated: {}".format(len(self.created_blocks)))
     print(" event buffer size: {}".format(len(self.event_buffer)))
+
+  def observe_create_events(self):
+    for i in self.event_buffer:
+        if i.event_type == EventType.CREATE_BLOCK:
+          print("Next creation event for Node {} is {}".format(self.id, i.timestamp))
+
 
   def update_master(self, master, block):
     master.append_block(block)

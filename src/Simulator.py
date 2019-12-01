@@ -85,9 +85,17 @@ class Simulator:
 
     #     n.draw_dag()
     #     n.print_stats()
+    print("Hello there")
+    print(self.time_passed)
     total_blocks = len(self.master.block_dag.nodes)
     #print("{} blocks generated in total!".format(total_blocks))
     self.master.draw_dag()
+
+    for i in self.nodes:
+      i.observe_create_events()
+
+    for i in self.nodes:
+      print("current time for node {} is {}".format(i.id, i.time))
 
     return total_blocks
 
@@ -123,8 +131,8 @@ class Simulator:
 if __name__ == "__main__":
   #random.seed(1234)
   mean = 0
-  for i in range(50):
+  for i in range(10):
     Block.counter = 1
-    sim = Simulator(2, 24, 2)
+    sim = Simulator(2, 24,2)
     mean += sim.run_simulation()
   print("Average num blocks generated: {}".format(mean / 50))

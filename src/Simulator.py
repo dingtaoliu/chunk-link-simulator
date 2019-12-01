@@ -1,5 +1,6 @@
 from Block import *
 from Node import *
+from DSNode import *
 from Network import *
 import random
 import datetime
@@ -8,7 +9,7 @@ import math
 class Simulator:
 
 
-  def __init__(self, num_nodes, duration, num_neighbours):
+  def __init__(self, num_nodes, duration, num_neighbours, malicious = []):
     """
     A Simulator that simulates the chain growing process for a
     `duration` period of time.
@@ -30,19 +31,30 @@ class Simulator:
     self.num_nodes = num_nodes
     self.nodes = []
 
-    r = [random.random() for i in range(num_nodes)]
+    num_mal = len(malicious)
+    num_hon = num_nodes - num_mal 
+
+    r = [random.random() for i in range(num_hon)]
+    mal_power = sum(malicious)
+    hon_power = 1 - mal_power
     s = sum(r)
-    hp = [i/s for i in r]
+    hp = [(i * hon_power) / s for i in r]
+    print("total power: {}".format(sum(hp) + mal_power))
 
     time = datetime.datetime.now()
     self.master = Node("master", time, 9001)
 
-    for i in range(num_nodes):
-      self.nodes.append(Node(i, time, hp[i], self.master))
-
     avg = 0
-    for i in range(num_nodes):
-      avg += self.nodes[i].block_rate
+    for i in range(num_hon):
+      node = Node(i, time, hp[i], self.master)
+      self.nodes.append(node)
+      avg += node.block_rate
+
+    for m in malicious:
+      node = DSNode(i, time, m, self.master)
+      self.nodes.append(node)
+      avg += node.block_rate
+
     print("AVG BLOCK RATE IS {}".format(avg))
     #self.network.set_uniform_gossip_factor(gossip_factor)
 
@@ -84,9 +96,10 @@ class Simulator:
     i = 0
     for n in self.nodes:
       i += 1
-      if i % 10 == 0:
+      #if i % 10 == 0:
 
-        n.draw_dag()
+      n.draw_dag()
+
     print("Hello there")
     print(self.time_passed)
     total_blocks = len(self.master.block_dag.nodes)
@@ -136,6 +149,6 @@ if __name__ == "__main__":
   num_runs = 1
   for i in range(num_runs):
     Block.counter = 1
-    sim = Simulator(50, 3, 10)
+    sim = Simulator(20, 10, 5, [])
     mean += sim.run_simulation()
   print("Average num blocks generated: {}".format(mean / num_runs))

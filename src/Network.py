@@ -7,7 +7,7 @@ import datetime
 class Network:
 
   # average delay 
-  AVERAGE_NETWORK_DELAY = datetime.timedelta(seconds=120)
+  AVERAGE_NETWORK_DELAY = datetime.timedelta(seconds=12)
 
   def __init__(self, num_nodes, num_neighbours, seed=1234):
     """
@@ -23,7 +23,7 @@ class Network:
         Seed
     """
 
-    self.graph = nx.fast_gnp_random_graph(num_nodes, num_neighbours / num_nodes, seed = 1234)
+    self.graph = nx.fast_gnp_random_graph(num_nodes, num_neighbours / num_nodes)
   
   # gossip factor is how many neighbours each node will gossip to 
   def set_uniform_gossip_factor(self, factor):

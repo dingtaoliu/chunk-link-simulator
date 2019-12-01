@@ -50,6 +50,8 @@ class Node:
 
     self.neighbours = None
 
+    self.hash_power = hash_power
+
     block_time = 1 / hash_power * Block.AVG_GEN_TIME
 
     self.block_rate = 1 / block_time
@@ -243,6 +245,8 @@ class Node:
     return [b for b,d in self.block_dag.nodes(data=True) if (d['depth'] == max_len) and (b in nodes)]
 
   
+
+  
   def draw_dag(self):
     position = graphviz_layout(self.block_dag, prog='dot')
     #print(self.block_dag)
@@ -273,9 +277,7 @@ class Node:
   def print_stats(self):
     print("Node {} stats: ".format(self.id))
     print(" hash power: {}".format(self.hash_power))
-    print(" average block time: {}".format(self.block_time))
     print(" blocks generated: {}".format(len(self.created_blocks)))
-    print(" event buffer size: {}".format(len(self.event_buffer)))
 
   def observe_create_events(self):
     for i in self.event_buffer:

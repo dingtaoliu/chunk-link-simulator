@@ -6,7 +6,7 @@ import datetime
 
 from Node import *
 
-ATTACK_START_LEN = 3
+ATTACK_START_LEN = 5
 ATTACK_DISTANCE = 2
 
 class DSNode(Node):
@@ -28,7 +28,10 @@ class DSNode(Node):
     # tie breaker
     parent = random.choice(candidates)
     self.best_block = parent
-    block = Block(parent, self.id)
+    if self.attack_block or self.attack:
+      block = Block(parent, self.id, "#a71930")
+    else:
+      block = Block(parent, self.id, "#ffb700")
     print("Node {} will generate block {} in {}".format(self.id, block.block_hash, time_to_generate))
     event = Event(EventType.CREATE_BLOCK, block, timestamp)
 

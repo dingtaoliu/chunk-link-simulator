@@ -252,8 +252,16 @@ class Node:
   
   def draw_dag(self):
     position = graphviz_layout(self.block_dag, prog='dot', args='-Gnodesep=5 -Granksep=5 -Gpad=1')
-    #print(self.block_dag)
-    nx.draw(self.block_dag, position, with_labels=True, arrows=True, node_size=100, font_size=8, node_color='#111111')
+    colours = []
+    for n, data in self.block_dag.nodes(data=True):
+      if n == "genesis":
+        colours.append("#0050bc")
+        continue 
+      block = data['block']
+      colours.append(block.colour)
+    print(colours)
+
+    nx.draw(self.block_dag, position, with_labels=True, arrows=True, node_size=100, font_size=8, node_color=colours)
     if self.id == "master":
       plt.savefig("{}_block_dag.png".format(self.id))
     else:

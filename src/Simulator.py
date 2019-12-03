@@ -99,12 +99,12 @@ class Simulator:
         #print("{} minutes has passed".format(counter * 10))
     #print("Simulation complete!")
     print("{} total iterations".format(iterations))
-    i = 0
-    for n in self.nodes:
-      i += 1
-      #if i % 10 == 0:
+    # i = 0
+    # for n in self.nodes:
+    #   i += 1
+    #   #if i % 10 == 0:
 
-      n.draw_dag()
+    #   n.draw_dag()
 
     print("Hello there")
     print(self.time_passed)
@@ -159,10 +159,7 @@ class Simulator:
         continue 
 
       block = data['block']
-      if block.node_id in self.mal_node_ids:
-        colours.append("#a71930")
-      else:
-        colours.append("#0050bc")
+      colours.append(block.colour)
 
     position = graphviz_layout(g, prog='dot', args='-Gnodesep=5 -Granksep=5 -Gpad=1')
     nx.draw(g, 
@@ -182,6 +179,6 @@ if __name__ == "__main__":
   num_runs = 1
   for i in range(num_runs):
     Block.counter = 1
-    sim = Simulator(5, 3, 5, [0.6])
+    sim = Simulator(100, 3, 10, [])
     mean += sim.run_simulation()
   print("Average num blocks generated: {}".format(mean / num_runs))

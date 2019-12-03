@@ -6,7 +6,7 @@ class Block:
   counter = 1
 
   # number of minutes per block
-  AVG_GEN_TIME = 5
+  AVG_GEN_TIME = 10
 
   METHOD = "longest_chain"
 

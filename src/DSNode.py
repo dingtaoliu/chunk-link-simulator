@@ -6,8 +6,8 @@ import datetime
 
 from Node import *
 
-ATTACK_START_LEN = 5
-ATTACK_DISTANCE = 2
+ATTACK_START_LEN = 10
+ATTACK_DISTANCE = 5
 
 class DSNode(Node):
 
@@ -29,10 +29,11 @@ class DSNode(Node):
     parent = random.choice(candidates)
     self.best_block = parent
     if self.attack_block or self.attack:
-      block = Block(parent, self.id, "#a71930")
+      print(candidates)
+      block = Block(self.attack_block, self.id, "#a71930")
     else:
       block = Block(parent, self.id, "#ffb700")
-    print("Node {} will generate block {} in {}".format(self.id, block.block_hash, time_to_generate))
+    print("Node {} will generate block {} on block {} in {}".format(self.id, block.block_hash, parent, time_to_generate))
     event = Event(EventType.CREATE_BLOCK, block, timestamp)
 
     heapq.heappush(self.event_buffer, event)
@@ -53,9 +54,13 @@ class DSNode(Node):
         nodes = tree.nodes
         max_len = len(nx.dag_longest_path(tree)) + depth - 1
         return [b for b,d in self.block_dag.nodes(data=True) if (d['depth'] == max_len) and (b in nodes)]
+
       elif len(longest_chain) >= ATTACK_START_LEN and self.attack_block is None:
+
         self.attack_block = longest_chain[ATTACK_START_LEN - ATTACK_DISTANCE]
-        print("Starting attack on block {}".format(self.attack_block))
+        print("Starting attack on block {}".format(longest_chain[ATTACK_START_LEN - 1]))
+
+        print("Forking on block {}".format(self.attack_block))
         self.attack = True
         return [self.attack_block]
       else:
@@ -94,8 +99,8 @@ class DSNode(Node):
             self.append_block(block)
             self.master.append_block(block)
 
-            print(candidates)
-            if self.attack_block is not None:
+            #print(candidates)
+            if self.attack_block is not None and block.prev_hash == self.attack_block:
               self.attack_block = block.block_hash
 
             self.gossip_buffer.append(block)
@@ -117,7 +122,7 @@ class DSNode(Node):
         #     return
         
         # check if any events should be processed
-        print(self.event_buffer[0].event_type)
+        #print(self.event_buffer[0].event_type)
         while self.event_buffer[0].timestamp <= self.time:
 
           event = heapq.heappop(self.event_buffer)

@@ -114,8 +114,8 @@ class Node:
     candidates = []
 
     candidates = self.get_candidates()
-    print("Candidates are {}".format(candidates))
-    print("Previous hash is {}".format(block.prev_hash))
+    #print("Candidates are {}".format(candidates))
+    #print("Previous hash is {}".format(block.prev_hash))
 
     if block.prev_hash in candidates:
         print("Node {} generated block {} at time {}".format(self.id, block.block_hash, self.time))
@@ -234,7 +234,7 @@ class Node:
     parent = random.choice(candidates)
     self.best_block = parent
     block = Block(parent, self.id)
-    print("Node {} will generate block {} in {}".format(self.id, block.block_hash, time_to_generate))
+    #print("Node {} will generate block {} in {}".format(self.id, block.block_hash, time_to_generate))
     event = Event(EventType.CREATE_BLOCK, block, timestamp)
 
     heapq.heappush(self.event_buffer, event)
@@ -247,8 +247,16 @@ class Node:
     max_len = len(nx.dag_longest_path(tree))
     return [b for b,d in self.block_dag.nodes(data=True) if (d['depth'] == max_len) and (b in nodes)]
 
-  
+  def get_ghost_blocks(self):
+    node = "genesis"
 
+    while len(self.block_dag[node]) > 0:
+      children = list(self.block_dag[node])
+      sizes = [len(nx.bfs_tree(self.block_dag, c).nodes) for c in children]
+      largest_index = sizes.index(max(sizes))
+      node = children[largest_index]
+    
+    return [node]
   
   def draw_dag(self):
     position = graphviz_layout(self.block_dag, prog='dot', args='-Gnodesep=5 -Granksep=5 -Gpad=1')
@@ -259,7 +267,7 @@ class Node:
         continue 
       block = data['block']
       colours.append(block.colour)
-    print(colours)
+    #print(colours)
 
     nx.draw(self.block_dag, position, with_labels=True, arrows=True, node_size=100, font_size=8, node_color=colours)
     if self.id == "master":
@@ -283,6 +291,8 @@ class Node:
   def get_candidates(self):
     if Block.METHOD == "longest_chain":
       return self.get_longest_chain_blocks()
+    elif Block.METHOD == "ghost":
+      return self.get_ghost_blocks()
 
 
   def print_stats(self):
@@ -301,6 +311,29 @@ class Node:
 
   def pass_time(self, time):
     self.time += time
+
+  def abandoned_blocks(self):
+    total_len = len(self.block_dag.nodes)
+    if Block.METHOD == "longest_chain":
+      tree = nx.bfs_tree(self.block_dag, "genesis")
+      max_len = len(nx.dag_longest_path(tree))
+
+      return total_len - max_len
+    elif Block.METHOD == "ghost":
+      count = 0
+      node = "genesis"
+
+      while len(self.block_dag[node]) > 0:
+        children = list(self.block_dag[node])
+        sizes = [len(nx.bfs_tree(self.block_dag, c).nodes) for c in children]
+        largest_index = sizes.index(max(sizes))
+        count += max(sizes)
+        node = children[largest_index]
+      
+      return total_len - count
+
+
+
 
 if __name__ == "__main__":
   n = Node("test")

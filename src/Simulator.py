@@ -106,10 +106,11 @@ class Simulator:
 
     #   n.draw_dag()
 
-    print("Hello there")
     print(self.time_passed)
     total_blocks = len(self.master.block_dag.nodes)
-    #print("{} blocks generated in total!".format(total_blocks))
+    print("{} blocks generated in total".format(total_blocks))
+    print("{} blocks abandoned".format(self.master.abandoned_blocks()))
+    print("The best chain ends at {}".format(self.master.get_candidates()))
     self.draw_master()
 
     # for i in self.nodes:
@@ -152,14 +153,22 @@ class Simulator:
 
   def draw_master(self):
     g = self.master.block_dag
+
+    tree = nx.bfs_tree(g, "genesis")
+    longest = nx.dag_longest_path(tree)
+
     colours = []
+    print("mal node id")
+    print(self.mal_node_ids)
     for n, data in g.nodes(data=True):
       if n == "genesis":
         colours.append("#0050bc")
         continue 
-
-      block = data['block']
-      colours.append(block.colour)
+      elif n in longest and self.mal_node_ids == []:
+        colours.append("#FFF233")
+      else:
+        block = data['block']
+        colours.append(block.colour)
 
     position = graphviz_layout(g, prog='dot', args='-Gnodesep=5 -Granksep=5 -Gpad=1')
     nx.draw(g, 
@@ -179,6 +188,6 @@ if __name__ == "__main__":
   num_runs = 1
   for i in range(num_runs):
     Block.counter = 1
-    sim = Simulator(100, 3, 10, [])
+    sim = Simulator(150, 3, 10, [0.51])
     mean += sim.run_simulation()
   print("Average num blocks generated: {}".format(mean / num_runs))

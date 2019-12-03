@@ -15,33 +15,47 @@ class DSNode(Node):
     Node.__init__(self, identifier, time, hash_power, master, upload_bandwidth)
 
     self.attack_block = None
+    self.attack = False
+
+  def create_block_event(self):
+    time_to_generate = random.expovariate(self.block_rate)
+    timestamp = self.time + datetime.timedelta(minutes=(time_to_generate))
+
+    candidates = []
+    # figure out where to append this block
+    candidates = self.get_candidates()
+
+    # tie breaker
+    parent = random.choice(candidates)
+    self.best_block = parent
+    block = Block(parent, self.id)
+    print("Node {} will generate block {} in {}".format(self.id, block.block_hash, time_to_generate))
+    event = Event(EventType.CREATE_BLOCK, block, timestamp)
+
+    heapq.heappush(self.event_buffer, event)
 
   def get_candidates(self):
-    print('xd')
     if Block.METHOD == "longest_chain":
+
       longest_chain = self.get_main_chain_blocks()
       if len(longest_chain) < ATTACK_START_LEN:
-        print("longest chain",  self.get_longest_chain_blocks())
         return self.get_longest_chain_blocks()
       elif self.attack_block is not None:
-        print("Attack_block is not none")
         print(self.attack_block)
+        if self.attack:
+            self.attack = False
+            return [self.attack_block]
         depth = self.block_dag.nodes[self.attack_block]['depth']
         tree = nx.bfs_tree(self.block_dag, self.attack_block)
         nodes = tree.nodes
         max_len = len(nx.dag_longest_path(tree)) + depth - 1
-        # print("Printing the depth and  max length and tree.")
-        # print(depth)
-        # print(max_len)
-        # print(list(tree.nodes()))
         return [b for b,d in self.block_dag.nodes(data=True) if (d['depth'] == max_len) and (b in nodes)]
-        #return [self.attack_block]
       elif len(longest_chain) >= ATTACK_START_LEN and self.attack_block is None:
         self.attack_block = longest_chain[ATTACK_START_LEN - ATTACK_DISTANCE]
         print("Starting attack on block {}".format(self.attack_block))
+        self.attack = True
         return [self.attack_block]
       else:
-        print("The else case")
         return [self.attack_block]
 
   def get_main_chain_blocks(self):
@@ -69,13 +83,15 @@ class DSNode(Node):
     if self.attack_block is None:
         Node.create_block(self,block)
     else:
-        print("Node {} generated block {} at time {}".format(self.id, block.block_hash, self.time))
-        self.append_block(block)
-        self.master.append_block(block)
         candidates = self.get_candidates()
-        
+
         if block.prev_hash in candidates:
             self.created_blocks.append(block.block_hash)
+            print("Node {} generated block {} at time {}".format(self.id, block.block_hash, self.time))
+            self.append_block(block)
+            self.master.append_block(block)
+
+            print(candidates)
             if self.attack_block is not None:
               self.attack_block = block.block_hash
 

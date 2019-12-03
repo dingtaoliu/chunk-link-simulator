@@ -114,9 +114,11 @@ class Node:
     candidates = []
 
     candidates = self.get_candidates()
+    print("Candidates are {}".format(candidates))
+    print("Previous hash is {}".format(block.prev_hash))
 
     if block.prev_hash in candidates:
-        # print("Node {} generated block {} at time {}".format(self.id, block.block_hash, self.time))
+        print("Node {} generated block {} at time {}".format(self.id, block.block_hash, self.time))
         self.append_block(block)
         self.master.append_block(block)
 
@@ -124,6 +126,7 @@ class Node:
         self.create_block_event()
 
         self.gossip_buffer.append(block)
+    self.master.draw_dag
 
   def gossip_block(self):
     """
@@ -231,7 +234,7 @@ class Node:
     parent = random.choice(candidates)
     self.best_block = parent
     block = Block(parent, self.id)
-    #print("Node {} will generate block {} in {}".format(self.id, block.block_hash, time_to_generate))
+    print("Node {} will generate block {} in {}".format(self.id, block.block_hash, time_to_generate))
     event = Event(EventType.CREATE_BLOCK, block, timestamp)
 
     heapq.heappush(self.event_buffer, event)

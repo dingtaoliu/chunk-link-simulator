@@ -85,7 +85,7 @@ class Node:
     
     # if parent block have not yet been seen
     else:
-      self.block_dag.add_node(block.block_hash, prev = block.prev_hash, depth=1)
+      self.block_dag.add_node(block.block_hash, prev = block.prev_hash, depth=1, block = block)
     
     # if we are connecting a disjoint graph with the main graph
     depth = self.block_dag.nodes[block.block_hash]['depth']
@@ -230,7 +230,7 @@ class Node:
     # tie breaker
     parent = random.choice(candidates)
     self.best_block = parent
-    block = Block(parent)
+    block = Block(parent, self.id)
     #print("Node {} will generate block {} in {}".format(self.id, block.block_hash, time_to_generate))
     event = Event(EventType.CREATE_BLOCK, block, timestamp)
 
@@ -248,13 +248,13 @@ class Node:
 
   
   def draw_dag(self):
-    position = graphviz_layout(self.block_dag, prog='dot')
+    position = graphviz_layout(self.block_dag, prog='dot', args='-Gnodesep=5 -Granksep=5 -Gpad=1')
     #print(self.block_dag)
-    nx.draw(self.block_dag, position, with_labels=True, arrows=True, scale=100)
+    nx.draw(self.block_dag, position, with_labels=True, arrows=True, node_size=100, font_size=8, node_color='#111111')
     if self.id == "master":
       plt.savefig("{}_block_dag.png".format(self.id))
     else:
-      plt.savefig("../graphs/{}_block_dag.png".format(self.id))
+      plt.savefig("../graphs/{}_block_dag.png".format(self.id), dpi=300)
 
     # clear the figure or else subsequent graphs will be combined for some reason
     plt.clf()

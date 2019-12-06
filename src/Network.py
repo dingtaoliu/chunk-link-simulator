@@ -7,7 +7,7 @@ import datetime
 class Network:
 
   # average delay 
-  AVERAGE_NETWORK_DELAY = datetime.timedelta(seconds=12)
+  AVERAGE_NETWORK_DELAY = datetime.timedelta(seconds=60)
 
   def __init__(self, num_nodes, num_neighbours, seed=1234):
     """

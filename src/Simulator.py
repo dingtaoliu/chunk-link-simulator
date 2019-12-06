@@ -10,7 +10,7 @@ import math
 class Simulator:
 
 
-  def __init__(self, num_nodes, duration, num_neighbours, malicious = [], isolated = False, num_isolated = 1):
+  def __init__(self, num_nodes, duration, num_neighbours, malicious = [], isolated = False, num_isolated = 5):
     """
     A Simulator that simulates the chain growing process for a
     `duration` period of time.
@@ -193,6 +193,6 @@ if __name__ == "__main__":
   num_runs = 1
   for i in range(num_runs):
     Block.counter = 1
-    sim = Simulator(10, 3, 10, isolated=True)
+    sim = Simulator(15, 3, 5, isolated=True)
     mean += sim.run_simulation()
   print("Average num blocks generated: {}".format(mean / num_runs))

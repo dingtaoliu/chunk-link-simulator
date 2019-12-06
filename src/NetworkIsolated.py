@@ -24,11 +24,11 @@ class NetworkIsolated(Network):
     """
 
     # We subtract isolated nodes from total nodes
-    self.graph = nx.fast_gnp_random_graph(num_nodes - num_isolated, num_neighbours / num_nodes)
+    self.graph = nx.fast_gnp_random_graph(num_nodes - num_isolated, num_neighbours / (num_nodes - num_isolated))
     for i in range(num_isolated):
       curr_id = i + num_nodes - num_isolated
       self.graph.add_node(curr_id)
-      k = random.randint(0, num_nodes-1)
+      k = random.randint(0, (num_nodes - num_isolated) - 1)
       self.graph.add_edge(curr_id, k)
     
     position = graphviz_layout(self.graph, prog='dot', args='-Gnodesep=5 -Granksep=5 -Gpad=1')

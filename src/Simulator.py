@@ -2,6 +2,7 @@ from Block import *
 from Node import *
 from DSNode import *
 from Network import *
+from NetworkIsolated import *
 import random
 import datetime
 import math
@@ -9,7 +10,7 @@ import math
 class Simulator:
 
 
-  def __init__(self, num_nodes, duration, num_neighbours, malicious = []):
+  def __init__(self, num_nodes, duration, num_neighbours, malicious = [], isolated = False, num_isolated = 1):
     """
     A Simulator that simulates the chain growing process for a
     `duration` period of time.
@@ -27,7 +28,10 @@ class Simulator:
     """
     self.duration = datetime.timedelta(hours=duration)
     self.time_passed = datetime.timedelta(0)
-    self.network = Network(num_nodes, num_neighbours)
+    if isolated:
+      self.network = NetworkIsolated(num_nodes, num_neighbours, num_isolated)
+    else:
+      self.network = Network(num_nodes, num_neighbours)
     self.num_nodes = num_nodes
     self.nodes = []
     self.hon_node_ids = []
@@ -72,6 +76,7 @@ class Simulator:
     # I dont think this is a bug though. Every node is expected to generate one block/h
     # we got 1k nodes => expected to generate 1k blocks within a hour
     for n in self.nodes:
+      print(n.id)
       neighbours = self.get_neighbours(n.id)
       n.update_neighbours(neighbours)
       n.create_block_event()
@@ -99,12 +104,12 @@ class Simulator:
         #print("{} minutes has passed".format(counter * 10))
     #print("Simulation complete!")
     print("{} total iterations".format(iterations))
-    # i = 0
-    # for n in self.nodes:
-    #   i += 1
-    #   #if i % 10 == 0:
+    i = 0
+    for n in self.nodes:
+      i += 1
+      #if i % 10 == 0:
 
-    #   n.draw_dag()
+      n.draw_dag()
 
     print(self.time_passed)
     total_blocks = len(self.master.block_dag.nodes)
@@ -188,6 +193,6 @@ if __name__ == "__main__":
   num_runs = 1
   for i in range(num_runs):
     Block.counter = 1
-    sim = Simulator(150, 3, 10, [0.51])
+    sim = Simulator(10, 3, 10, isolated=True)
     mean += sim.run_simulation()
   print("Average num blocks generated: {}".format(mean / num_runs))

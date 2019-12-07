@@ -9,7 +9,7 @@ import math
 class Simulator:
 
 
-  def __init__(self, num_nodes, duration, num_neighbours, malicious = []):
+  def __init__(self, num_nodes, duration, num_neighbours, malicious = [], draw_dags=False):
     """
     A Simulator that simulates the chain growing process for a
     `duration` period of time.
@@ -32,6 +32,7 @@ class Simulator:
     self.nodes = []
     self.hon_node_ids = []
     self.mal_node_ids = []
+    self.draw_dags = draw_dags
 
     num_mal = len(malicious)
     num_hon = num_nodes - num_mal 
@@ -75,7 +76,6 @@ class Simulator:
       neighbours = self.get_neighbours(n.id)
       n.update_neighbours(neighbours)
       n.create_block_event()
-      #n.print_stats()
 
     counter = 0
     iterations = 0
@@ -92,21 +92,17 @@ class Simulator:
           n.pass_time(time_interval)
 
       self.time_passed += time_interval
-      #print("{} has passed".format(self.time_passed))
       if self.time_passed // log_interval > counter:
         counter += 1
 
-        #print("{} minutes has passed".format(counter * 10))
-    #print("Simulation complete!")
+    print("Simulation complete!")
     print("{} total iterations".format(iterations))
-    # i = 0
-    # for n in self.nodes:
-    #   i += 1
-    #   #if i % 10 == 0:
 
-    #   n.draw_dag()
+    if self.draw_dags:
+      for n in self.nodes:
+        n.draw_dag()
 
-    print(self.time_passed)
+    print("{} simulated".format(self.time_passed))
     total_blocks = len(self.master.block_dag.nodes)
     print("{} blocks generated in total".format(total_blocks))
     print("{} blocks abandoned".format(self.master.abandoned_blocks()))
@@ -158,8 +154,6 @@ class Simulator:
     longest = nx.dag_longest_path(tree)
 
     colours = []
-    print("mal node id")
-    print(self.mal_node_ids)
     for n, data in g.nodes(data=True):
       if n == "genesis":
         colours.append("#0050bc")
@@ -188,6 +182,6 @@ if __name__ == "__main__":
   num_runs = 1
   for i in range(num_runs):
     Block.counter = 1
-    sim = Simulator(150, 3, 10, [0.51])
+    sim = Simulator(200, 3, 10, [])
     mean += sim.run_simulation()
   print("Average num blocks generated: {}".format(mean / num_runs))

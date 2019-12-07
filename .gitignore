@@ -5,3 +5,7 @@ graphs/
 .vscode/
 src/__pycache__/
 env/
+bin/
+lib/
+lib64
+pyvenv.cfg

@@ -103,9 +103,10 @@ class Simulator:
         n.draw_dag()
 
     print("{} simulated".format(self.time_passed))
-    total_blocks = len(self.master.block_dag.nodes)
+    total_blocks = len(self.master.block_dag.nodes) - 1
+    abandoned_blocks = self.master.abandoned_blocks()
     print("{} blocks generated in total".format(total_blocks))
-    print("{} blocks abandoned".format(self.master.abandoned_blocks()))
+    print("{} blocks abandoned".format(abandoned_blocks))
     print("The best chain ends at {}".format(self.master.get_candidates()))
     self.draw_master()
 
@@ -115,7 +116,7 @@ class Simulator:
     # for i in self.nodes:
     #   print("current time for node {} is {}".format(i.id, i.time))
 
-    return total_blocks
+    return total_blocks, abandoned_blocks
 
 
   def get_next_nodes(self):
@@ -178,10 +179,14 @@ class Simulator:
 
 if __name__ == "__main__":
   #random.seed(1234)
-  mean = 0
-  num_runs = 1
+  mean_total = 0
+  mean_abandonded = 0
+  num_runs = 5
   for i in range(num_runs):
     Block.counter = 1
-    sim = Simulator(200, 3, 10, [])
-    mean += sim.run_simulation()
-  print("Average num blocks generated: {}".format(mean / num_runs))
+    sim = Simulator(200, 2, 10, [])
+    total, abandonded = sim.run_simulation()
+    mean_total += total
+    mean_abandonded += abandonded
+  print("Average num blocks generated: {}".format(mean_total / num_runs))
+  print("Average num blocks abandoned: {}".format(mean_abandonded / num_runs))

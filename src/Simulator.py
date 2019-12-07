@@ -30,6 +30,8 @@ class Simulator:
     self.network = Network(num_nodes, num_neighbours)
     self.num_nodes = num_nodes
     self.nodes = []
+    self.hon_node_ids = []
+    self.mal_node_ids = []
 
     num_mal = len(malicious)
     num_hon = num_nodes - num_mal 
@@ -49,11 +51,15 @@ class Simulator:
       node = Node(i, time, hp[i], self.master)
       self.nodes.append(node)
       avg += node.block_rate
+      self.hon_node_ids.append(i)
 
+    i += 1
     for m in malicious:
       node = DSNode(i, time, m, self.master)
       self.nodes.append(node)
       avg += node.block_rate
+      self.mal_node_ids.append(i)
+      i += 1
 
     print("AVG BLOCK RATE IS {}".format(avg))
     #self.network.set_uniform_gossip_factor(gossip_factor)
@@ -93,18 +99,19 @@ class Simulator:
         #print("{} minutes has passed".format(counter * 10))
     #print("Simulation complete!")
     print("{} total iterations".format(iterations))
-    i = 0
-    for n in self.nodes:
-      i += 1
-      #if i % 10 == 0:
+    # i = 0
+    # for n in self.nodes:
+    #   i += 1
+    #   #if i % 10 == 0:
 
-      n.draw_dag()
+    #   n.draw_dag()
 
-    print("Hello there")
     print(self.time_passed)
     total_blocks = len(self.master.block_dag.nodes)
-    #print("{} blocks generated in total!".format(total_blocks))
-    self.master.draw_dag()
+    print("{} blocks generated in total".format(total_blocks))
+    print("{} blocks abandoned".format(self.master.abandoned_blocks()))
+    print("The best chain ends at {}".format(self.master.get_candidates()))
+    self.draw_master()
 
     # for i in self.nodes:
     #   i.observe_create_events()
@@ -143,12 +150,44 @@ class Simulator:
     node_ids =  self.network.neighbours(node)
     return [self.nodes[i] for i in range(self.num_nodes)]
 
+
+  def draw_master(self):
+    g = self.master.block_dag
+
+    tree = nx.bfs_tree(g, "genesis")
+    longest = nx.dag_longest_path(tree)
+
+    colours = []
+    print("mal node id")
+    print(self.mal_node_ids)
+    for n, data in g.nodes(data=True):
+      if n == "genesis":
+        colours.append("#0050bc")
+        continue 
+      elif n in longest and self.mal_node_ids == []:
+        colours.append("#FFF233")
+      else:
+        block = data['block']
+        colours.append(block.colour)
+
+    position = graphviz_layout(g, prog='dot', args='-Gnodesep=5 -Granksep=5 -Gpad=1')
+    nx.draw(g, 
+            position, 
+            with_labels=True, 
+            arrows=True, 
+            node_size=100, 
+            font_size=8, 
+            node_color=colours,
+            arrowsize=5)
+    plt.savefig("master_block_dag.png", dpi=300)
+    plt.clf()
+
 if __name__ == "__main__":
   #random.seed(1234)
   mean = 0
   num_runs = 1
   for i in range(num_runs):
     Block.counter = 1
-    sim = Simulator(20, 10, 5, [])
+    sim = Simulator(150, 3, 10, [0.51])
     mean += sim.run_simulation()
   print("Average num blocks generated: {}".format(mean / num_runs))

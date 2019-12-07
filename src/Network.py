@@ -24,6 +24,8 @@ class Network:
     """
 
     self.graph = nx.fast_gnp_random_graph(num_nodes, num_neighbours / num_nodes)
+
+
   
   # gossip factor is how many neighbours each node will gossip to 
   def set_uniform_gossip_factor(self, factor):

@@ -85,7 +85,7 @@ class Node:
     
     # if parent block have not yet been seen
     else:
-      self.block_dag.add_node(block.block_hash, prev = block.prev_hash, depth=1)
+      self.block_dag.add_node(block.block_hash, prev = block.prev_hash, depth=1, block = block)
     
     # if we are connecting a disjoint graph with the main graph
     depth = self.block_dag.nodes[block.block_hash]['depth']
@@ -114,9 +114,11 @@ class Node:
     candidates = []
 
     candidates = self.get_candidates()
+    #print("Candidates are {}".format(candidates))
+    #print("Previous hash is {}".format(block.prev_hash))
 
     if block.prev_hash in candidates:
-        # print("Node {} generated block {} at time {}".format(self.id, block.block_hash, self.time))
+        print("Node {} generated block {} at time {}".format(self.id, block.block_hash, self.time))
         self.append_block(block)
         self.master.append_block(block)
 
@@ -124,6 +126,7 @@ class Node:
         self.create_block_event()
 
         self.gossip_buffer.append(block)
+    self.master.draw_dag
 
   def gossip_block(self):
     """
@@ -230,7 +233,7 @@ class Node:
     # tie breaker
     parent = random.choice(candidates)
     self.best_block = parent
-    block = Block(parent)
+    block = Block(parent, self.id)
     #print("Node {} will generate block {} in {}".format(self.id, block.block_hash, time_to_generate))
     event = Event(EventType.CREATE_BLOCK, block, timestamp)
 
@@ -244,17 +247,33 @@ class Node:
     max_len = len(nx.dag_longest_path(tree))
     return [b for b,d in self.block_dag.nodes(data=True) if (d['depth'] == max_len) and (b in nodes)]
 
-  
+  def get_ghost_blocks(self):
+    node = "genesis"
 
+    while len(self.block_dag[node]) > 0:
+      children = list(self.block_dag[node])
+      sizes = [len(nx.bfs_tree(self.block_dag, c).nodes) for c in children]
+      largest_index = sizes.index(max(sizes))
+      node = children[largest_index]
+    
+    return [node]
   
   def draw_dag(self):
-    position = graphviz_layout(self.block_dag, prog='dot')
-    #print(self.block_dag)
-    nx.draw(self.block_dag, position, with_labels=True, arrows=True, scale=100)
+    position = graphviz_layout(self.block_dag, prog='dot', args='-Gnodesep=5 -Granksep=5 -Gpad=1')
+    colours = []
+    for n, data in self.block_dag.nodes(data=True):
+      if n == "genesis":
+        colours.append("#0050bc")
+        continue 
+      block = data['block']
+      colours.append(block.colour)
+    #print(colours)
+
+    nx.draw(self.block_dag, position, with_labels=True, arrows=True, node_size=100, font_size=8, node_color=colours)
     if self.id == "master":
       plt.savefig("{}_block_dag.png".format(self.id))
     else:
-      plt.savefig("../graphs/{}_block_dag.png".format(self.id))
+      plt.savefig("../graphs/{}_block_dag.png".format(self.id), dpi=300)
 
     # clear the figure or else subsequent graphs will be combined for some reason
     plt.clf()
@@ -272,6 +291,8 @@ class Node:
   def get_candidates(self):
     if Block.METHOD == "longest_chain":
       return self.get_longest_chain_blocks()
+    elif Block.METHOD == "ghost":
+      return self.get_ghost_blocks()
 
 
   def print_stats(self):
@@ -290,6 +311,29 @@ class Node:
 
   def pass_time(self, time):
     self.time += time
+
+  def abandoned_blocks(self):
+    total_len = len(self.block_dag.nodes)
+    if Block.METHOD == "longest_chain":
+      tree = nx.bfs_tree(self.block_dag, "genesis")
+      max_len = len(nx.dag_longest_path(tree))
+
+      return total_len - max_len
+    elif Block.METHOD == "ghost":
+      count = 0
+      node = "genesis"
+
+      while len(self.block_dag[node]) > 0:
+        children = list(self.block_dag[node])
+        sizes = [len(nx.bfs_tree(self.block_dag, c).nodes) for c in children]
+        largest_index = sizes.index(max(sizes))
+        count += max(sizes)
+        node = children[largest_index]
+      
+      return total_len - count
+
+
+
 
 if __name__ == "__main__":
   n = Node("test")

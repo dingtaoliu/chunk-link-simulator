@@ -6,8 +6,8 @@ import datetime
 
 from Node import *
 
-ATTACK_START_LEN = 10
-ATTACK_DISTANCE = 5
+ATTACK_START_LEN = 20
+ATTACK_DISTANCE = 8
 
 class DSNode(Node):
 
@@ -39,32 +39,32 @@ class DSNode(Node):
     heapq.heappush(self.event_buffer, event)
 
   def get_candidates(self):
-    if Block.METHOD == "longest_chain":
+    # if Block.METHOD == "longest_chain":
 
-      longest_chain = self.get_main_chain_blocks()
-      if len(longest_chain) < ATTACK_START_LEN:
-        return self.get_longest_chain_blocks()
-      elif self.attack_block is not None:
-        print(self.attack_block)
-        if self.attack:
-            self.attack = False
-            return [self.attack_block]
-        depth = self.block_dag.nodes[self.attack_block]['depth']
-        tree = nx.bfs_tree(self.block_dag, self.attack_block)
-        nodes = tree.nodes
-        max_len = len(nx.dag_longest_path(tree)) + depth - 1
-        return [b for b,d in self.block_dag.nodes(data=True) if (d['depth'] == max_len) and (b in nodes)]
+    longest_chain = self.get_main_chain_blocks()
+    if len(longest_chain) < ATTACK_START_LEN:
+      return self.get_longest_chain_blocks()
+    elif self.attack_block is not None:
+      print(self.attack_block)
+      if self.attack:
+          self.attack = False
+          return [self.attack_block]
+      depth = self.block_dag.nodes[self.attack_block]['depth']
+      tree = nx.bfs_tree(self.block_dag, self.attack_block)
+      nodes = tree.nodes
+      max_len = len(nx.dag_longest_path(tree)) + depth - 1
+      return [b for b,d in self.block_dag.nodes(data=True) if (d['depth'] == max_len) and (b in nodes)]
 
-      elif len(longest_chain) >= ATTACK_START_LEN and self.attack_block is None:
+    elif len(longest_chain) >= ATTACK_START_LEN and self.attack_block is None:
 
-        self.attack_block = longest_chain[ATTACK_START_LEN - ATTACK_DISTANCE]
-        print("Starting attack on block {}".format(longest_chain[ATTACK_START_LEN - 1]))
+      self.attack_block = longest_chain[ATTACK_START_LEN - ATTACK_DISTANCE]
+      print("Starting attack on block {}".format(longest_chain[ATTACK_START_LEN - 1]))
 
-        print("Forking on block {}".format(self.attack_block))
-        self.attack = True
-        return [self.attack_block]
-      else:
-        return [self.attack_block]
+      print("Forking on block {}".format(self.attack_block))
+      self.attack = True
+      return [self.attack_block]
+    else:
+      return [self.attack_block]
 
   def get_main_chain_blocks(self):
     # for b, d in self.block_dag.nodes(data=True):

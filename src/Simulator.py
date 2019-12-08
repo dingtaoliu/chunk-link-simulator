@@ -181,10 +181,10 @@ if __name__ == "__main__":
   #random.seed(1234)
   mean_total = 0
   mean_abandonded = 0
-  num_runs = 5
+  num_runs = 1
   for i in range(num_runs):
     Block.counter = 1
-    sim = Simulator(200, 2, 10, [])
+    sim = Simulator(150, 8, 10, [0.55])
     total, abandonded = sim.run_simulation()
     mean_total += total
     mean_abandonded += abandonded

@@ -320,14 +320,14 @@ class Node:
 
       return total_len - max_len
     elif Block.METHOD == "ghost":
-      count = 0
+      count = 1
       node = "genesis"
 
       while len(self.block_dag[node]) > 0:
         children = list(self.block_dag[node])
         sizes = [len(nx.bfs_tree(self.block_dag, c).nodes) for c in children]
         largest_index = sizes.index(max(sizes))
-        count += max(sizes)
+        count += 1
         node = children[largest_index]
       
       return total_len - count

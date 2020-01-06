@@ -1,4 +1,5 @@
-# BCS
+# CLS
+Chunk(Block) Link(Chain) Simulator
 
 ## Usage
 

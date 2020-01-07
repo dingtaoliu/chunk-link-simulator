@@ -1,5 +1,4 @@
-# CLS
-Chunk(Block) Link(Chain) Simulator
+# Blockchain Simulator
 
 ## Usage
 
